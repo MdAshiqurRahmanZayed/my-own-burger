@@ -44,7 +44,6 @@ class Auth extends Component {
     }
     else{
       form = (
-
         <Formik
           initialValues={{
             email: "",
@@ -53,8 +52,8 @@ class Auth extends Component {
           }}
           onSubmit={(values) => {
             this.props.auth(values.email, values.password, this.state.mode);
-               // console.log(values);
-     }}
+            // console.log(values);
+          }}
           validate={(values) => {
             const errors = {};
 
@@ -119,6 +118,7 @@ class Auth extends Component {
                   placeholder="Password"
                   className="form-control"
                   value={values.password}
+                  type="password"
                   onChange={handleChange}
                 />
                 <span style={{ color: "red" }}>{errors.password}</span>
@@ -130,6 +130,7 @@ class Auth extends Component {
                       name="passwordConfirm"
                       placeholder="Confirm Password"
                       className="form-control"
+                      type="password"
                       value={values.passwordConfirm}
                       onChange={handleChange}
                     />
@@ -147,7 +148,7 @@ class Auth extends Component {
             </div>
           )}
         </Formik>
-      )
+      );
     }
     return (
       <div>
