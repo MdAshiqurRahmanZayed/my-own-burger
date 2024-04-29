@@ -1,7 +1,15 @@
 import React from "react";
 
 const Order = (props) => {
-  const ingredientSummary = props.order.ingredients.map((item) => {
+  const ingredients = []
+  for (let [key,value] of Object.entries(props.order.ingredients))
+  {
+    ingredients.push({
+      type: key,
+      amount: value,
+    });
+  } 
+  const ingredientSummary = ingredients.map((item) => {
     return (
       <span
         style={{

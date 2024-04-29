@@ -1,5 +1,7 @@
 import * as actionTypes from './actionTypes';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+
 
 export const authSuccess = (token, userId) => {
      return {
@@ -23,37 +25,81 @@ export const authFailedMsg = errorMsg => {
      }
 }
 
+
+const saveTokenDataGetUserId = access =>{
+               const access_token = access
+               const token = jwtDecode(access_token)
+               // console.log(token);
+               localStorage.setItem('token', access_token);
+               localStorage.setItem('userId', token.user_id);
+               const expirationTime = new Date( token.exp * 1000);
+               localStorage.setItem('expirationTime', expirationTime);
+               return token.user_id
+
+}
+
+
 export const auth = (email, password, mode) => dispatch => {
      dispatch(authLoading(true))
      const authData = {
           email: email,
           password: password,
-          returnSecureToken: true,
+          // returnSecureToken: true,
      }
 
      let authUrl = null;
      if (mode === "Sign Up") {
-          authUrl = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=";
+          authUrl = "http://127.0.0.1:8000/api/user/";
      } else {
-          authUrl = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=";
+          authUrl = "http://127.0.0.1:8000/api/token/";
      }
-     const API_KEY = "";
-     console.log(authData);
-     console.log(authUrl);
-     axios.post(authUrl + API_KEY, authData)
+     // const API_KEY = "";
+     // console.log(authData);
+     // console.log(authUrl);
+     axios.post(authUrl , authData)
           .then(response => {
                dispatch(authLoading(false))
-               localStorage.setItem('token', response.data.idToken);
-               localStorage.setItem('userId', response.data.localId);
-               const expirationTime = new Date(new Date().getTime() + response.data.expiresIn * 1000);
-               localStorage.setItem('expirationTime', expirationTime);
-               dispatch(authSuccess(response.data.idToken, response.data.localId));
+               if (mode !== "Sign Up") {
+                    // console.log('login',response.data);
+                    
+                    const access_token = response.data.access
+                    const user_id = saveTokenDataGetUserId(access_token);
+                    dispatch(authSuccess(access_token, user_id));
+
+               }
+               else{
+                    return axios.post('http://127.0.0.1:8000/api/token/',authData)
+                    .then(response=>{
+                         const access_token = response.data.access
+                         const user_id = saveTokenDataGetUserId(access_token);
+                         dispatch(authSuccess(access_token, user_id))
+                    })
+
+               }
+               // console.log(response);
+               // const access_token = response.data.access
+               // const token = jwtDecode(response.data.access)
+               // // console.log(token);
+               // localStorage.setItem('token', access_token);
+               // localStorage.setItem('userId', token.user_id);
+               // const expirationTime = new Date( token.exp * 1000);
+               // localStorage.setItem('expirationTime', expirationTime);
+               // dispatch(authSuccess(access_token, user_id));
+
+
+               // localStorage.setItem('token', response.data.idToken);
+               // localStorage.setItem('userId', response.data.localId);
+               // const expirationTime = new Date(new Date().getTime() + response.data.expiresIn * 1000);
+               // localStorage.setItem('expirationTime', expirationTime);
+               // dispatch(authSuccess(response.data.idToken, response.data.localId));
           })
           .catch(error => {
-               console.log('Error authenticating:', error.response.data.error.message);
+               // console.log('Error authenticating:', error.response.data.error.message);
                // console.error('Error authenticating:', error.response.data.error.message)
                dispatch(authLoading(false));
-               dispatch(authFailedMsg(error.response.data.error.message));
+               const key = Object.keys(error.response.data)[0]
+               const errValue = error.response.data[key]
+               dispatch(authFailedMsg(`${errValue}`));
           }
           );
 }

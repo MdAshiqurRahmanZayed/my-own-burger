@@ -1,31 +1,30 @@
+import React, { Component } from "react";
+import { Button, Modal, ModalBody } from "reactstrap";
+import Spinner from "../../Spinner/Spinner";
 
-import React, { Component } from 'react';
-import { Button, Modal, ModalBody } from 'reactstrap';
-import Spinner from '../../Spinner/Spinner';
+import axios from "axios";
 
-import axios from 'axios';
+import { connect } from "react-redux";
+import { resetIngredients } from "../../../redux/actionCreators";
 
-import { connect } from 'react-redux';
-import { resetIngredients } from '../../../redux/actionCreators';
+import { Formik } from "formik";
+import { Navigate } from "react-router-dom";
 
-import { Formik } from 'formik';
-import { Navigate } from 'react-router-dom';
+const mapStateToProps = (state) => {
+  return {
+    ingredients: state.ingredients,
+    totalPrice: state.totalPrice,
+    purchasable: state.purchasable,
+    userId: state.userId,
+    token: state.token,
+  };
+};
 
-const mapStateToProps = state => {
-    return {
-        ingredients: state.ingredients,
-        totalPrice: state.totalPrice,
-        purchasable: state.purchasable,
-        userId: state.userId,
-        token: state.token,
-    }
-}
-
-const mapDispatchToProps = dispatch => {
-    return {
-        resetIngredients: () => dispatch(resetIngredients()),
-    }
-}
+const mapDispatchToProps = (dispatch) => {
+  return {
+    resetIngredients: () => dispatch(resetIngredients()),
+  };
+};
 
 class Checkout extends Component {
   state = {
@@ -42,18 +41,24 @@ class Checkout extends Component {
   };
 
   submitHandler = (values) => {
+    const url = "http://127.0.0.1:8000/api/order/";
     this.setState({ isLoading: true });
+    const ingredients = [...this.props.ingredients];
+    const ingredientsObject = {}
+    for (let i of ingredients){
+      ingredientsObject[i.type]= i.amount;
+    }
     const order = {
-      ingredients: this.props.ingredients,
+      ingredients: ingredientsObject,
       customer: values,
       price: this.props.totalPrice,
       orderTime: new Date(),
-      userId:this.props.userId
+      user: this.props.userId,
     };
     axios
-      .post("https://my-burger-5be65-default-rtdb.firebaseio.com/orders.json?auth="+this.props.token,order)
+      .post(url, order)
       .then((response) => {
-        if (response.status === 200) {
+        if (response.status === 201) {
           this.setState({
             isLoading: false,
             isModalOpen: true,
